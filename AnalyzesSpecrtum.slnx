@@ -1,0 +1,7 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj" Id="f68821b4-ed0f-4a94-a43d-47d6bca64f81" />
+</Solution>
