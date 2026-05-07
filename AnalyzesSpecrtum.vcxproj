@@ -111,12 +111,12 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>C:\КОЛЛЕДЖ\Системное программирование\Учебный проект\SpectrumAnalyz\AnalyzesSpecrtum\imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+<AdditionalIncludeDirectories>$(ProjectDir)imgui;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>C:\Users\pe4en\Downloads\fftw-3.3.5-dll64</AdditionalLibraryDirectories>
+    <AdditionalLibraryDirectories>$(ProjectDir)imgui</AdditionalLibraryDirectories>
       <AdditionalDependencies>d3d11.lib; d3dcompiler.lib; libfftw3-3.lib;</AdditionalDependencies>
     </Link>
     <Manifest>
