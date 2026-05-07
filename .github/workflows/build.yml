@@ -14,14 +14,14 @@ jobs:
     - name: Скачивание кода репозитория
       uses: actions/checkout@v4
 
-    - name: Настройка NuGet
-      uses: nuget/setup-nuget@v2
+    - name: Настройка MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Установка и настройка NuGet
+      uses: NuGet/setup-nuget@v3.0.0
 
     - name: Восстановление NuGet-пакетов
       run: nuget restore AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj -PackagesDirectory AnalyzesSpecrtum/packages
-
-    - name: Настройка MSBuild
-      uses: microsoft/setup-msbuild@v2
 
     - name: Сборка проекта
       run: msbuild AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj /p:Configuration=Debug /p:Platform=x64
