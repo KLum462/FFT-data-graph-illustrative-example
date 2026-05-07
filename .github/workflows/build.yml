@@ -21,8 +21,18 @@ jobs:
       uses: NuGet/setup-nuget@v3.0.0
 
     - name: Восстановление NuGet-пакетов
-
       run: nuget restore AnalyzesSpecrtum.vcxproj -PackagesDirectory packages
 
-    - name: Сборка проекта
-      run: msbuild AnalyzesSpecrtum.vcxproj /p:Configuration=Debug /p:Platform=x64 /p:PlatformToolset=v143
+    - name: Сборка проекта (в режиме Release)
+      run: msbuild AnalyzesSpecrtum.vcxproj /p:Configuration=Release /p:Platform=x64 /p:PlatformToolset=v143
+
+    - name: Подготовка файлов для скачивания (копирование DLL)
+      run: copy imgui\libfftw3-3.dll x64\Release\
+
+    - name: Сохранение готовой программы (Артефакт)
+      uses: actions/upload-artifact@v4
+      with:
+        name: SpectrumAnalyzer-Windows
+        path: |
+          x64/Release/AnalyzesSpecrtum.exe
+          x64/Release/libfftw3-3.dll
