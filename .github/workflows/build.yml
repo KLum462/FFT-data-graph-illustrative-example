@@ -1,0 +1,21 @@
+name: C++ Build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: windows-latest
+
+    steps:
+    - name: Скачивание кода репозитория
+      uses: actions/checkout@v4
+
+    - name: Настройка MSBuild
+      uses: microsoft/setup-msbuild@v2
+
+    - name: Сборка проекта
+      run: msbuild AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj /p:Configuration=Debug /p:Platform=x64
