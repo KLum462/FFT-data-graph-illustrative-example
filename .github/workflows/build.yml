@@ -21,7 +21,9 @@ jobs:
       uses: NuGet/setup-nuget@v3.0.0
 
     - name: Восстановление NuGet-пакетов
-      run: nuget restore AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj -PackagesDirectory AnalyzesSpecrtum/packages
+
+      run: nuget restore AnalyzesSpecrtum.vcxproj -PackagesDirectory packages
 
     - name: Сборка проекта
-      run: msbuild AnalyzesSpecrtum/AnalyzesSpecrtum.vcxproj /p:Configuration=Debug /p:Platform=x64
+
+      run: msbuild AnalyzesSpecrtum.vcxproj /p:Configuration=Debug /p:Platform=x64
