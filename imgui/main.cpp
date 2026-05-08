@@ -7,7 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <cmath>
-#include <fftw3.h> // библиотека для FFT
+#include <fftw3.h> 
 
 
 static ID3D11Device* g_pd3dDevice = nullptr;
@@ -30,6 +30,7 @@ struct FFTData {
 };
 
 //  генерация и подсчет FFT 
+
 FFTData GenerateFFTData() {
     FFTData data;
     const double sampleRate = 10000000.0; // 10 МГц
@@ -43,44 +44,62 @@ FFTData GenerateFFTData() {
 
     fftw_plan plan = fftw_plan_dft_1d(N, in, out, FFTW_FORWARD, FFTW_ESTIMATE);
 
-    // Генерируем сигнал
+
+    double windowSum = 0.0;
+
+
     for (int i = 0; i < N; ++i) {
         double t = i / sampleRate;
 
         // первый сигнал (-1 МГц)
         double real1 = 1.0 * std::cos(2.0 * M_PI * freq1 * t);
-        double imag1 = 1.0 * std::sin(2.0 * M_PI * freq1 * t); // тоже 1.0
+        double imag1 = 1.0 * std::sin(2.0 * M_PI * freq1 * t);
 
         // второй сигнал (2 МГц)
         double real2 = 1.5 * std::cos(2.0 * M_PI * freq2 * t);
-        double imag2 = 1.5 * std::sin(2.0 * M_PI * freq2 * t); // тоже 1.5
+        double imag2 = 1.5 * std::sin(2.0 * M_PI * freq2 * t);
 
-        in[i][0] = real1 + real2;
-        in[i][1] = imag1 + imag2;
+        // Окно Blackman-Harris
+        double a0 = 0.35875;
+        double a1 = 0.48829;
+        double a2 = 0.14128;
+        double a3 = 0.01168;
+
+        double window = a0 - a1 * std::cos(2.0 * M_PI * (double)i / (double)(N - 1))
+            + a2 * std::cos(4.0 * M_PI * (double)i / (double)(N - 1))
+            - a3 * std::cos(6.0 * M_PI * (double)i / (double)(N - 1));
+
+        windowSum += window;
+
+
+        in[i][0] = (real1 + real2) * window;
+        in[i][1] = (imag1 + imag2) * window;
     }
 
     // Считаем FFT
     fftw_execute(plan);
 
-    // Отрицательные частоты
+
     for (int i = N / 2; i < N; ++i) {
         double currentFreq = -((N - i) * sampleRate) / N;
 
         double realPart = out[i][0];
         double imagPart = out[i][1];
-        double magnitude = std::sqrt(realPart * realPart + imagPart * imagPart) / N;
+
+   
+        double magnitude = std::sqrt(realPart * realPart + imagPart * imagPart) / windowSum;
 
         data.frequencies.push_back((float)currentFreq);
         data.magnitudes.push_back((float)magnitude);
     }
-
-    // Положительные частоты
     for (int i = 0; i < N / 2; ++i) {
         double currentFreq = (i * sampleRate) / N;
 
         double realPart = out[i][0];
         double imagPart = out[i][1];
-        double magnitude = std::sqrt(realPart * realPart + imagPart * imagPart) / N;
+
+
+        double magnitude = std::sqrt(realPart * realPart + imagPart * imagPart) / windowSum;
 
         data.frequencies.push_back((float)currentFreq);
         data.magnitudes.push_back((float)magnitude);
@@ -107,13 +126,13 @@ void DrawFFTWindow(const FFTData& fftData)
         static int start_idx = 0;
         static int visible_points = maxPoints;
 
-        static float view_max_db = 0.0f;
+        static float view_max_db = 10.0f; 
         static float view_min_db = -90.0f;
 
         auto ResetScale = [&]() {
             start_idx = 0;
             visible_points = maxPoints;
-            view_max_db = 0.0f;
+            view_max_db = 10.0f;
             view_min_db = -90.0f;
             };
 
@@ -214,6 +233,21 @@ void DrawFFTWindow(const FFTData& fftData)
                 has_last = true;
             }
         }
+
+
+        if (view_max_db >= 0.0f && view_min_db <= 0.0f) {
+            float t_0db = (0.0f - view_min_db) / (view_max_db - view_min_db);
+            float y_0db = p1.y - t_0db * plot_size.y;
+
+            // Зеленая линия для выделения 0 дБ
+            draw_list->AddLine(ImVec2(p0.x, y_0db), ImVec2(p1.x, y_0db), IM_COL32(0, 255, 0, 200), 1.5f);
+
+            // Текст 0 dBFS
+            const char* label_0db = "0 dBFS";
+            ImVec2 label_size = ImGui::CalcTextSize(label_0db);
+            draw_list->AddText(ImVec2(p0.x + 5.0f, y_0db - label_size.y - 2.0f), IM_COL32(0, 255, 0, 255), label_0db);
+        }
+
         draw_list->PopClipRect();
 
         int num_x_ticks = 10;
@@ -289,7 +323,15 @@ void DrawFFTWindow(const FFTData& fftData)
                     ImGui::Text("Уровень: %.2f dBFS", db);
                     ImGui::Text("Амплитуда (лин): %.6f", mag);
                     ImGui::EndTooltip();
+
+                    // Вертикальная линия прицела
                     draw_list->AddLine(ImVec2(mousePos.x, p0.y), ImVec2(mousePos.x, p1.y), IM_COL32(255, 255, 0, 150), 1.0f);
+
+                    // Горизонтальная линия прицела 
+                    float clamped_mouse_y = mousePos.y;
+                    if (clamped_mouse_y < p0.y) clamped_mouse_y = p0.y;
+                    if (clamped_mouse_y > p1.y) clamped_mouse_y = p1.y;
+                    draw_list->AddLine(ImVec2(p0.x, clamped_mouse_y), ImVec2(p1.x, clamped_mouse_y), IM_COL32(255, 255, 0, 150), 1.0f);
                 }
             }
         }
